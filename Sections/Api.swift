@@ -2,6 +2,7 @@ import Foundation
 
 protocol Api {
     func getSections() async throws -> [Section]
+    func getSectionDetails(from url: String) async throws -> SectionDetailed
 }
 
 enum ApiError: Error {
@@ -54,6 +55,26 @@ class ApiImpl: Api {
         
         return apiResponse.links.sections
     }
+    
+    func getSectionDetails(from url: String) async throws -> SectionDetailed {
+        guard let requestUrl = URL(string: url) else {
+            throw ApiError.invalidURL
+        }
+        
+        let (data, response) = try await urlSession.data(from: requestUrl)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw ApiError.invalidResponse
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw ApiError.httpError(statusCode: httpResponse.statusCode)
+        }
+        
+        let decoder = JSONDecoder()
+        let sectionDetails = try decoder.decode(SectionDetailed.self, from: data)
+        
+        return sectionDetails
+    }
 }
-
 

@@ -15,3 +15,8 @@ struct Section: Decodable {
         href.replacingOccurrences(of: #"\{[^}]*\}"#, with: "", options: .regularExpression)
     }
 }
+
+struct SectionDetailed: Decodable {
+    let title: String
+    let description: String
+}

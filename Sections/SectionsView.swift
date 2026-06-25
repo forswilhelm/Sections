@@ -52,10 +52,19 @@ struct SectionsView: View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(Array(viewModel.sections.enumerated()), id: \.element.id) { index, section in
-                    SectionCard(
-                        section: section,
-                        color: sectionColors[index % sectionColors.count]
-                    )
+                    NavigationLink {
+                        SectionDetailView(
+                            section: section,
+                            color: sectionColors[index % sectionColors.count],
+                            service: SectionsServiceImpl(api: ApiImpl())
+                        )
+                    } label: {
+                        SectionCard(
+                            section: section,
+                            color: sectionColors[index % sectionColors.count]
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding()
