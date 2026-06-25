@@ -8,4 +8,10 @@ struct Section: Decodable {
     let sectionSort: Int
     let name: String
     let templated: Bool
+    
+    /// Returns the href with URI template placeholders removed
+    var cleanHref: String {
+        // Remove URI template syntax like {param} or {?param}
+        href.replacingOccurrences(of: #"\{[^}]*\}"#, with: "", options: .regularExpression)
+    }
 }
