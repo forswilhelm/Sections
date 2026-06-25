@@ -24,15 +24,19 @@ The app follows a layered architecture with manual dependency injection wired in
 Api (protocol/impl) → SectionsService (protocol/impl) → SectionsViewModel → SectionsView
 ```
 
-**`Api` / `ApiImpl`** — Fetches from `https://content.viaplay.com/ios-se`. The response is a HAL-style JSON where sections are nested under `_links["viaplay:sections"]`. `ApiImpl` decodes this into `[Section]` and throws `ApiError` on network or HTTP failures.
+**`Api` / `ApiImpl`** — Network layer. `getSections()` fetches `https://content.viaplay.com/ios-se`, a HAL-style response where sections live under `_links["viaplay:sections"]`. `getSectionDetails(from:)` fetches a section's `cleanHref` URL and decodes `SectionDetailed`. Throws `ApiError` on failure.
 
-**`SectionsService` / `SectionsServiceImpl`** — Thin layer over `Api` that translates `ApiError` into `SectionsServiceError`. Exists to decouple the ViewModel from API-level error types.
+**`SectionsService` / `SectionsServiceImpl`** — Thin layer over `Api` that translates `ApiError` into `SectionsServiceError`. `getSectionDetails(for:)` uses `section.cleanHref` (URI template placeholders stripped) to build the detail URL.
 
-**`SectionsViewModel`** — `@MainActor ObservableObject` with a `ViewState` enum (`loading`, `loaded`, `error`). Drives the view via `@Published` properties.
+**`SectionsViewModel`** — `@MainActor ObservableObject` driving `SectionsView`. `ViewState` is `loading | loaded | error(String)`.
 
-**`SectionsView`** — Switches on `viewState` to render a loading spinner, a `LazyVGrid` of `SectionCard`s, or an error view with a retry button. The ViewModel is injected via `init` and held as `@StateObject`.
+**`SectionDetailViewModel`** — Same pattern as above, but drives `SectionDetailView`. `ViewState.loaded` carries a `SectionDetailed` value.
 
-**`Section`** — The core model, decoded from the API. `cleanHref` strips URI template placeholders (`{param}`) from `href` for use in navigation.
+**`SectionsView`** — Root view. Renders a `LazyVGrid` of `SectionCard`s on success; passes `SectionsService` down to `SectionDetailView` for DI.
+
+**`SectionDetailView`** — Detail screen pushed via `NavigationStack`. Shows `SectionDetailed.title` and `.description` in a card layout with a color-matched gradient background.
+
+**Models** — `Section` is decoded from the list API. `SectionDetailed` (`title`, `description`) is decoded from a section's detail URL. `Section.cleanHref` strips URI template syntax (`{param}`) from `href`.
 
 ## Project Configuration
 
