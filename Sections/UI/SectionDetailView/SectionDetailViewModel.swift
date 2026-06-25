@@ -2,10 +2,11 @@ import Foundation
 import Combine
 
 @MainActor
-class SectionDetailViewModel: ObservableObject {
+class SectionDetailViewModel: ObservableObject, Identifiable {
     @Published var viewState: ViewState = .loading
     
-    private let section: Section
+    let id: String
+    let section: Section
     private let service: SectionsService
     
     enum ViewState {
@@ -15,6 +16,7 @@ class SectionDetailViewModel: ObservableObject {
     }
     
     init(section: Section, service: SectionsService) {
+        self.id = section.id
         self.section = section
         self.service = service
     }
@@ -30,5 +32,17 @@ class SectionDetailViewModel: ObservableObject {
         } catch {
             viewState = .error("An unexpected error occurred")
         }
+    }
+}
+
+// MARK: - Hashable
+
+extension SectionDetailViewModel: Hashable {
+    static func == (lhs: SectionDetailViewModel, rhs: SectionDetailViewModel) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }

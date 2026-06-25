@@ -21,13 +21,19 @@ struct SectionsView: View {
                 switch viewModel.viewState {
                 case .loading:
                     loadingView
-                case .loaded:
-                    sectionsGridView
+                case .loaded(let sections):
+                    sectionsGridView(sections: sections)
                 case .error(let message):
                     errorView(message: message)
                 }
             }
             .navigationTitle("Sections")
+            .navigationDestination(item: $viewModel.selectedSection) { selection in
+                SectionDetailView(
+                    color: selection.color,
+                    viewModel: selection.viewModel
+                )
+            }
             .task {
                 await viewModel.loadSections()
             }
@@ -48,23 +54,17 @@ struct SectionsView: View {
     
     // MARK: - Sections Grid View
     
-    private var sectionsGridView: some View {
+    private func sectionsGridView(sections: [Section]) -> some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(Array(viewModel.sections.enumerated()), id: \.element.id) { index, section in
-                    NavigationLink {
-                        SectionDetailView(
-                            section: section,
-                            color: sectionColors[index % sectionColors.count],
-                            service: SectionsServiceImpl(api: ApiImpl())
-                        )
-                    } label: {
-                        SectionCard(
-                            section: section,
-                            color: sectionColors[index % sectionColors.count]
-                        )
-                    }
-                    .buttonStyle(.plain)
+                ForEach(Array(sections.enumerated()), id: \.element.id) { index, section in
+                    SectionCard(
+                        section: section,
+                        color: sectionColors[index % sectionColors.count],
+                        onTap: {
+                            viewModel.selectSection(section, color: sectionColors[index % sectionColors.count])
+                        }
+                    )
                 }
             }
             .padding()

@@ -1,15 +1,8 @@
 import SwiftUI
 
 struct SectionDetailView: View {
-    let section: Section
     let color: Color
-    @StateObject private var viewModel: SectionDetailViewModel
-    
-    init(section: Section, color: Color, service: SectionsService) {
-        self.section = section
-        self.color = color
-        _viewModel = StateObject(wrappedValue: SectionDetailViewModel(section: section, service: service))
-    }
+    @ObservedObject var viewModel: SectionDetailViewModel
     
     var body: some View {
         ZStack {
@@ -31,7 +24,7 @@ struct SectionDetailView: View {
                 errorView(message: message)
             }
         }
-        .navigationTitle(section.title)
+        .navigationTitle(viewModel.section.title)
         .navigationBarTitleDisplayMode(.large)
         .task {
             await viewModel.loadDetails()
@@ -134,20 +127,21 @@ struct SectionDetailView: View {
 #Preview {
     let api = ApiImpl()
     let service = SectionsServiceImpl(api: api)
+    let section = Section(
+        id: "1",
+        title: "Serier",
+        href: "https://content.viaplay.com/ios-se/serier",
+        type: "vod",
+        sectionSort: 1,
+        name: "series",
+        templated: true
+    )
+    let viewModel = SectionDetailViewModel(section: section, service: service)
     
     return NavigationStack {
         SectionDetailView(
-            section: Section(
-                id: "1",
-                title: "Serier",
-                href: "https://content.viaplay.com/ios-se/serier",
-                type: "vod",
-                sectionSort: 1,
-                name: "series",
-                templated: true
-            ),
             color: .blue,
-            service: service
+            viewModel: viewModel
         )
     }
 }
