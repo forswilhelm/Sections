@@ -16,27 +16,42 @@ xcodebuild -project Sections.xcodeproj -scheme Sections -destination 'platform=i
 
 The project is primarily developed through Xcode. New Swift files added to the `Sections/` directory are picked up automatically — the project uses `PBXFileSystemSynchronizedRootGroup`, so the `.pbxproj` does not need to be manually edited when adding or removing source files.
 
+## File Structure
+
+```
+Sections/
+  Models/       — Domain models and SwiftData cache models
+  Services/     — Api, SectionsService, CacheManager, error types
+  Mocks/        — MockCacheManager, MockData (previews only)
+  UI/
+    SectionsView/       — List screen (view, viewmodel, card)
+    SectionDetailView/  — Detail screen (view, viewmodel)
+```
+
 ## Architecture
 
-The app follows a layered architecture with manual dependency injection wired in `SectionsApp`:
+Layered with manual DI wired in `SectionsApp`:
 
 ```
-Api (protocol/impl) → SectionsService (protocol/impl) → SectionsViewModel → SectionsView
+Api → SectionsService → SectionsViewModel → SectionsView
+                      → SectionDetailViewModel → SectionDetailView
 ```
 
-**`Api` / `ApiImpl`** — Network layer. `getSections()` fetches `https://content.viaplay.com/ios-se`, a HAL-style response where sections live under `_links["viaplay:sections"]`. `getSectionDetails(from:)` fetches a section's `cleanHref` URL and decodes `SectionDetailed`. Throws `ApiError` on failure.
+**`Api` / `ApiImpl`** — Network layer. `getSections()` fetches `https://content.viaplay.com/ios-se`, a HAL-style response where sections live under `_links["viaplay:sections"]`. `getSectionDetails(from:)` fetches a section's `cleanHref` URL. `ApiImpl` enforces HTTPS via `validateSecureURL(_:)` and throws `ApiError.insecureURL` for non-HTTPS URLs.
 
-**`SectionsService` / `SectionsServiceImpl`** — Thin layer over `Api` that translates `ApiError` into `SectionsServiceError`. `getSectionDetails(for:)` uses `section.cleanHref` (URI template placeholders stripped) to build the detail URL.
+**`SectionsService` / `SectionsServiceImpl`** — Returns `Result<T, SectionsServiceError>` (not throwing). Implements offline-first: on network failure it falls back to the SwiftData cache. Logs cache hits/misses via `os.Logger`.
 
-**`SectionsViewModel`** — `@MainActor ObservableObject` driving `SectionsView`. `ViewState` is `loading | loaded | error(String)`.
+**`CacheManaging` / `CacheManagingImpl`** — `@ModelActor` actor backed by SwiftData. Caches `[Section]` and `SectionDetailed` with a 24-hour expiration (`TimeInterval.days(1)`). The `ModelContainer` is created in `SectionsApp.init()` and injected here. `MockCacheManager` (in `Mocks/`) is used in Xcode previews.
 
-**`SectionDetailViewModel`** — Same pattern as above, but drives `SectionDetailView`. `ViewState.loaded` carries a `SectionDetailed` value.
+**`SectionsViewModel`** — `@MainActor ObservableObject`. `ViewState` is `loading | loaded([Section]) | error(String)`. Navigation: `selectedSection: Section?` is set by `selectSection(_:)`; the view calls `makeDetailViewModel(for:)` inside `navigationDestination(item:)` to create the detail VM on demand. The sections grid supports pull-to-refresh.
 
-**`SectionsView`** — Root view. Renders a `LazyVGrid` of `SectionCard`s; each card is wrapped in a `NavigationLink` that pushes `SectionDetailView`. The service passed to `SectionDetailView` is instantiated inline (`SectionsServiceImpl(api: ApiImpl())`), not from the parent ViewModel.
+**`SectionDetailViewModel`** — `@MainActor ObservableObject`, conforms to `Identifiable` and `Hashable` by `section.id`. `ViewState` is `loading | loaded(SectionDetailed) | error(String)`.
 
-**`SectionDetailView`** — Detail screen pushed via `NavigationStack`. Shows `SectionDetailed.title` and `.description` in a card layout with a color-matched gradient background.
+**`SectionsView`** — Root view with `NavigationStack`. Uses `navigationDestination(item: $viewModel.selectedSection)` and resolves color/VM lazily in the destination closure. `SectionCard` receives an `onTap` closure.
 
-**Models** — `Section` is decoded from the list API. `SectionDetailed` (`title`, `description`) is decoded from a section's detail URL. `Section.cleanHref` strips URI template syntax (`{param}`) from `href`.
+**`SectionDetailView`** — Takes `color: Color` and `viewModel: SectionDetailViewModel` as `@ObservedObject`. Shows title and description in a color-matched gradient layout.
+
+**Models** (`Models/SectionModels.swift`) — `Section` (API response, `Sendable`), `SectionDetailed` (carries `sectionId`, `title`, `description`; `Sendable`), and the SwiftData models `CachedSection` / `CachedSectionDetail` (`@Model` classes with `cachedAt` timestamps). `Section.cleanHref` strips URI template placeholders using a Swift Regex literal.
 
 ## Project Configuration
 
