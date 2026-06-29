@@ -28,16 +28,26 @@ struct SectionsView: View {
                 }
             }
             .navigationTitle("Sections")
-            .navigationDestination(item: $viewModel.selectedSection) { selection in
+            .navigationDestination(item: $viewModel.selectedSection) { section in
                 SectionDetailView(
-                    color: selection.color,
-                    viewModel: selection.viewModel
+                    color: colorForSection(section),
+                    viewModel: viewModel.makeDetailViewModel(for: section)
                 )
             }
             .task {
                 await viewModel.loadSections()
             }
         }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func colorForSection(_ section: Section) -> Color {
+        guard case .loaded(let sections) = viewModel.viewState,
+              let index = sections.firstIndex(where: { $0.id == section.id }) else {
+            return .blue
+        }
+        return sectionColors[index % sectionColors.count]
     }
     
     // MARK: - Loading View
@@ -62,7 +72,7 @@ struct SectionsView: View {
                         section: section,
                         color: sectionColors[index % sectionColors.count],
                         onTap: {
-                            viewModel.selectSection(section, color: sectionColors[index % sectionColors.count])
+                            viewModel.selectSection(section)
                         }
                     )
                 }
@@ -109,8 +119,9 @@ struct SectionsView: View {
 
 #Preview {
     let api = ApiImpl()
-    let service = SectionsServiceImpl(api: api)
+    let cacheManager = MockCacheManager()
+    let service = SectionsServiceImpl(api: api, cacheManager: cacheManager)
     let viewModel = SectionsViewModel(service: service)
     
-    return SectionsView(viewModel: viewModel)
+    SectionsView(viewModel: viewModel)
 }

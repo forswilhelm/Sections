@@ -126,7 +126,8 @@ struct SectionDetailView: View {
 
 #Preview {
     let api = ApiImpl()
-    let service = SectionsServiceImpl(api: api)
+    let cacheManager = MockCacheManager()
+    let service = SectionsServiceImpl(api: api, cacheManager: cacheManager)
     let section = Section(
         id: "1",
         title: "Serier",
@@ -138,7 +139,7 @@ struct SectionDetailView: View {
     )
     let viewModel = SectionDetailViewModel(section: section, service: service)
     
-    return NavigationStack {
+    NavigationStack {
         SectionDetailView(
             color: .blue,
             viewModel: viewModel

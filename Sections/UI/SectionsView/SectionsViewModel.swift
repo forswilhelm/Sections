@@ -1,6 +1,5 @@
 import Foundation
 import Combine
-import SwiftUI
 
 @MainActor
 class SectionsViewModel: ObservableObject {
@@ -10,22 +9,8 @@ class SectionsViewModel: ObservableObject {
         case error(String)
     }
     
-    struct SectionSelection: Identifiable, Hashable {
-        let id = UUID()
-        let viewModel: SectionDetailViewModel
-        let color: Color
-        
-        static func == (lhs: SectionSelection, rhs: SectionSelection) -> Bool {
-            lhs.id == rhs.id
-        }
-        
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(id)
-        }
-    }
-    
     @Published var viewState: ViewState = .loading
-    @Published var selectedSection: SectionSelection?
+    @Published var selectedSection: Section?
     
     private let service: SectionsService
     
@@ -45,8 +30,11 @@ class SectionsViewModel: ObservableObject {
         }
     }
     
-    func selectSection(_ section: Section, color: Color) {
-        let detailViewModel = SectionDetailViewModel(section: section, service: service)
-        selectedSection = SectionSelection(viewModel: detailViewModel, color: color)
+    func selectSection(_ section: Section) {
+        selectedSection = section
+    }
+    
+    func makeDetailViewModel(for section: Section) -> SectionDetailViewModel {
+        SectionDetailViewModel(section: section, service: service)
     }
 }
