@@ -9,10 +9,30 @@ class SectionDetailViewModel: ObservableObject, Identifiable {
     let section: Section
     private let service: SectionsService
     
-    enum ViewState {
+    enum ViewState: Equatable {
         case loading
         case loaded(SectionDetailed)
         case error(String)
+        
+        // Computed properties for convenience
+        var detail: SectionDetailed? {
+            if case .loaded(let detail) = self {
+                return detail
+            }
+            return nil
+        }
+        
+        var isLoading: Bool {
+            if case .loading = self { return true }
+            return false
+        }
+        
+        var errorMessage: String? {
+            if case .error(let message) = self {
+                return message
+            }
+            return nil
+        }
     }
     
     init(section: Section, service: SectionsService) {
@@ -24,13 +44,13 @@ class SectionDetailViewModel: ObservableObject, Identifiable {
     func loadDetails() async {
         viewState = .loading
         
-        do {
-            let details = try await service.getSectionDetails(for: section)
+        let result = await service.getSectionDetails(for: section)
+        
+        switch result {
+        case .success(let details):
             viewState = .loaded(details)
-        } catch let error as SectionsServiceError {
+        case .failure(let error):
             viewState = .error(error.localizedDescription)
-        } catch {
-            viewState = .error("An unexpected error occurred")
         }
     }
 }

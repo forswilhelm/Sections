@@ -128,16 +128,7 @@ struct SectionDetailView: View {
     let api = ApiImpl()
     let cacheManager = MockCacheManager()
     let service = SectionsServiceImpl(api: api, cacheManager: cacheManager)
-    let section = Section(
-        id: "1",
-        title: "Serier",
-        href: "https://content.viaplay.com/ios-se/serier",
-        type: "vod",
-        sectionSort: 1,
-        name: "series",
-        templated: true
-    )
-    let viewModel = SectionDetailViewModel(section: section, service: service)
+    let viewModel = SectionDetailViewModel(section: MockData.sections[0], service: service)
     
     NavigationStack {
         SectionDetailView(

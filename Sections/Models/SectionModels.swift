@@ -3,7 +3,7 @@ import SwiftData
 
 // MARK: - Domain Models (API Response)
 
-struct Section: Decodable, Identifiable, Hashable {
+struct Section: Decodable, Identifiable, Hashable, Sendable {
     let id: String
     let title: String
     let href: String
@@ -15,11 +15,11 @@ struct Section: Decodable, Identifiable, Hashable {
     /// Returns the href with URI template placeholders removed
     var cleanHref: String {
         // Remove URI template syntax like {param} or {?param}
-        href.replacingOccurrences(of: #"\{[^}]*\}"#, with: "", options: .regularExpression)
+        href.replacing(/\{[^}]*\}/, with: "")
     }
 }
 
-struct SectionDetailed: Decodable {
+struct SectionDetailed: Decodable, Sendable {
     let title: String
     let description: String
 }

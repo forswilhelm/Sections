@@ -3,10 +3,30 @@ import Combine
 
 @MainActor
 class SectionsViewModel: ObservableObject {
-    enum ViewState {
+    enum ViewState: Equatable {
         case loading
         case loaded([Section])
         case error(String)
+        
+        // Computed properties for convenience
+        var sections: [Section]? {
+            if case .loaded(let sections) = self {
+                return sections
+            }
+            return nil
+        }
+        
+        var isLoading: Bool {
+            if case .loading = self { return true }
+            return false
+        }
+        
+        var errorMessage: String? {
+            if case .error(let message) = self {
+                return message
+            }
+            return nil
+        }
     }
     
     @Published var viewState: ViewState = .loading
@@ -21,12 +41,13 @@ class SectionsViewModel: ObservableObject {
     func loadSections() async {
         viewState = .loading
         
-        do {
-            viewState = .loaded(try await service.getSections())
-        } catch let error as SectionsServiceError {
+        let result = await service.getSections()
+        
+        switch result {
+        case .success(let sections):
+            viewState = .loaded(sections)
+        case .failure(let error):
             viewState = .error(error.localizedDescription)
-        } catch {
-            viewState = .error("An unexpected error occurred")
         }
     }
     

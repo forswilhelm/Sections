@@ -29,35 +29,21 @@ struct SectionCard: View {
             .shadow(color: color.opacity(0.3), radius: 8, y: 4)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Section: \(section.title)")
+        .accessibilityHint("Double tap to view details")
     }
 }
 
 #Preview {
     HStack(spacing: 16) {
         SectionCard(
-            section: Section(
-                id: "1",
-                title: "Serier",
-                href: "https://example.com",
-                type: "vod",
-                sectionSort: 1,
-                name: "series",
-                templated: true
-            ),
+            section: MockData.sections[0],
             color: .blue,
             onTap: { print("Tapped Serier") }
         )
         
         SectionCard(
-            section: Section(
-                id: "2",
-                title: "Filmer",
-                href: "https://example.com",
-                type: "vod",
-                sectionSort: 2,
-                name: "movie",
-                templated: true
-            ),
+            section: MockData.sections[1],
             color: .purple,
             onTap: { print("Tapped Filmer") }
         )

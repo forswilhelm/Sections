@@ -1,20 +1,13 @@
 import Foundation
 
-enum SectionsServiceError: Error {
+enum SectionsServiceError: LocalizedError {
     case apiError(ApiError)
     case unknownError(Error)
     
-    var localizedDescription: String {
+    var errorDescription: String? {
         switch self {
         case .apiError(let apiError):
-            switch apiError {
-            case .invalidURL:
-                return "The URL is invalid"
-            case .invalidResponse:
-                return "Received an invalid response from the server"
-            case .httpError(let statusCode):
-                return "HTTP error with status code: \(statusCode)"
-            }
+            return apiError.errorDescription
         case .unknownError(let error):
             return "An unknown error occurred: \(error.localizedDescription)"
         }

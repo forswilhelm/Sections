@@ -79,6 +79,9 @@ struct SectionsView: View {
             }
             .padding()
         }
+        .refreshable {
+            await viewModel.loadSections()
+        }
     }
     
     // MARK: - Error View

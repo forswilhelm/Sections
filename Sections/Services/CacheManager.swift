@@ -1,6 +1,12 @@
 import Foundation
 import SwiftData
 
+extension TimeInterval {
+    static func days(_ days: Int) -> TimeInterval {
+        TimeInterval(days * 24 * 60 * 60)
+    }
+}
+
 /// Protocol defining the cache management interface for sections and their details.
 /// Conforming types should handle persistence and retrieval of cached data.
 protocol CacheManaging: Actor {
@@ -34,8 +40,8 @@ protocol CacheManaging: Actor {
 /// Implements cache expiration and provides offline support for the app.
 @ModelActor
 actor CacheManagingImpl: CacheManaging {
-    // Cache expiration time (e.g., 24 hours)
-    private let cacheExpirationInterval: TimeInterval = 24 * 60 * 60
+    // Cache expiration time (24 hours)
+    private let cacheExpirationInterval: TimeInterval = .days(1)
     
     // MARK: - Sections Caching
     
