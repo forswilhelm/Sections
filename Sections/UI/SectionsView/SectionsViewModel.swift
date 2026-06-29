@@ -7,26 +7,6 @@ class SectionsViewModel: ObservableObject {
         case loading
         case loaded([Section])
         case error(String)
-        
-        // Computed properties for convenience
-        var sections: [Section]? {
-            if case .loaded(let sections) = self {
-                return sections
-            }
-            return nil
-        }
-        
-        var isLoading: Bool {
-            if case .loading = self { return true }
-            return false
-        }
-        
-        var errorMessage: String? {
-            if case .error(let message) = self {
-                return message
-            }
-            return nil
-        }
     }
     
     @Published var viewState: ViewState = .loading

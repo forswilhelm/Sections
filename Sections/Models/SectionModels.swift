@@ -19,7 +19,8 @@ struct Section: Decodable, Identifiable, Hashable, Sendable {
     }
 }
 
-struct SectionDetailed: Decodable, Sendable {
+struct SectionDetailed: Decodable, Sendable, Equatable {
+    let sectionId: String
     let title: String
     let description: String
 }
@@ -27,8 +28,6 @@ struct SectionDetailed: Decodable, Sendable {
 // MARK: - SwiftData Models (Cached Data)
 
 /// SwiftData model for caching Section data.
-/// Must be a class because SwiftData uses reference semantics to track changes
-/// and manage the object graph in the persistent store.
 @Model
 final class CachedSection {
     @Attribute(.unique) var id: String
@@ -106,13 +105,13 @@ final class CachedSectionDetail {
     
     /// Convert to the domain model
     func toSectionDetailed() -> SectionDetailed {
-        SectionDetailed(title: title, description: descriptionText)
+        SectionDetailed(sectionId: sectionId, title: title, description: descriptionText)
     }
     
     /// Create from the domain model
-    static func from(_ detail: SectionDetailed, sectionId: String) -> CachedSectionDetail {
+    static func from(_ detail: SectionDetailed) -> CachedSectionDetail {
         CachedSectionDetail(
-            sectionId: sectionId,
+            sectionId: detail.sectionId,
             title: detail.title,
             descriptionText: detail.description
         )

@@ -16,7 +16,7 @@ protocol SectionsService: Sendable {
     func getSectionDetails(for section: Section) async -> Result<SectionDetailed, SectionsServiceError>
 }
 
-final class SectionsServiceImpl: SectionsService, @unchecked Sendable {
+final class SectionsServiceImpl: SectionsService {
     private let api: Api
     private let cacheManager: any CacheManaging
     private let logger = Logger(subsystem: "com.sections.app", category: "service")
@@ -70,7 +70,7 @@ final class SectionsServiceImpl: SectionsService, @unchecked Sendable {
             
             // Cache the successful response
             do {
-                try await cacheManager.cacheSectionDetail(details, for: section.id)
+                try await cacheManager.cacheSectionDetail(details)
             } catch {
                 logger.warning("Failed to cache section detail: \(error.localizedDescription)")
             }

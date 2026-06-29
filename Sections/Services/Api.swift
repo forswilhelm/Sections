@@ -41,30 +41,12 @@ struct ApiResponse: Decodable {
     }
 }
 
-final class ApiImpl: Api, @unchecked Sendable {
+final class ApiImpl: Api {
     private let endpoint = "https://content.viaplay.com/ios-se"
     private let urlSession: URLSession
     
     init(urlSession: URLSession = .shared) {
         self.urlSession = urlSession
-    }
-    
-    /// Validates that the URL is secure (HTTPS only)
-    private func validateSecureURL(_ urlString: String) throws -> URL {
-        guard let url = URL(string: urlString) else {
-            throw ApiError.invalidURL
-        }
-        
-        guard let scheme = url.scheme?.lowercased() else {
-            throw ApiError.invalidURL
-        }
-        
-        // Enforce HTTPS for security
-        guard scheme == "https" else {
-            throw ApiError.insecureURL
-        }
-        
-        return url
     }
     
     func getSections() async throws -> [Section] {
@@ -103,6 +85,24 @@ final class ApiImpl: Api, @unchecked Sendable {
         let sectionDetails = try decoder.decode(SectionDetailed.self, from: data)
         
         return sectionDetails
+    }
+    
+    /// Validates that the URL is secure (HTTPS only)
+    private func validateSecureURL(_ urlString: String) throws -> URL {
+        guard let url = URL(string: urlString) else {
+            throw ApiError.invalidURL
+        }
+        
+        guard let scheme = url.scheme?.lowercased() else {
+            throw ApiError.invalidURL
+        }
+        
+        // Enforce HTTPS for security
+        guard scheme == "https" else {
+            throw ApiError.insecureURL
+        }
+        
+        return url
     }
 }
 

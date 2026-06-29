@@ -13,26 +13,6 @@ class SectionDetailViewModel: ObservableObject, Identifiable {
         case loading
         case loaded(SectionDetailed)
         case error(String)
-        
-        // Computed properties for convenience
-        var detail: SectionDetailed? {
-            if case .loaded(let detail) = self {
-                return detail
-            }
-            return nil
-        }
-        
-        var isLoading: Bool {
-            if case .loading = self { return true }
-            return false
-        }
-        
-        var errorMessage: String? {
-            if case .error(let message) = self {
-                return message
-            }
-            return nil
-        }
     }
     
     init(section: Section, service: SectionsService) {
@@ -54,8 +34,6 @@ class SectionDetailViewModel: ObservableObject, Identifiable {
         }
     }
 }
-
-// MARK: - Hashable
 
 extension SectionDetailViewModel: Hashable {
     static func == (lhs: SectionDetailViewModel, rhs: SectionDetailViewModel) -> Bool {

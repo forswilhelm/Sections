@@ -1,12 +1,6 @@
 import Foundation
 import SwiftData
 
-extension TimeInterval {
-    static func days(_ days: Int) -> TimeInterval {
-        TimeInterval(days * 24 * 60 * 60)
-    }
-}
-
 /// Protocol defining the cache management interface for sections and their details.
 /// Conforming types should handle persistence and retrieval of cached data.
 protocol CacheManaging: Actor {
@@ -20,20 +14,14 @@ protocol CacheManaging: Actor {
     func getCachedSections() -> [Section]?
     
     /// Cache detailed information for a specific section
-    /// - Parameters:
-    ///   - detail: The section details to cache
-    ///   - sectionId: The ID of the section these details belong to
+    /// - Parameter detail: The section details to cache (contains sectionId)
     /// - Throws: Error if caching fails
-    func cacheSectionDetail(_ detail: SectionDetailed, for sectionId: String) throws
+    func cacheSectionDetail(_ detail: SectionDetailed) throws
     
     /// Retrieve cached section details if available and not expired
     /// - Parameter sectionId: The ID of the section to retrieve details for
     /// - Returns: Cached section details, or nil if cache is empty or expired
     func getCachedSectionDetail(for sectionId: String) -> SectionDetailed?
-    
-    /// Clear all cached data
-    /// - Throws: Error if clearing fails
-    func clearAllCache() throws
 }
 
 /// Actor-based cache manager that persists data using SwiftData.
@@ -78,8 +66,9 @@ actor CacheManagingImpl: CacheManaging {
     
     // MARK: - Section Details Caching
     
-    func cacheSectionDetail(_ detail: SectionDetailed, for sectionId: String) throws {
+    func cacheSectionDetail(_ detail: SectionDetailed) throws {
         // Remove existing cached detail for this section
+        let sectionId = detail.sectionId
         let predicate = #Predicate<CachedSectionDetail> { cached in
             cached.sectionId == sectionId
         }
@@ -90,7 +79,7 @@ actor CacheManagingImpl: CacheManaging {
         }
         
         // Insert new detail
-        modelContext.insert(CachedSectionDetail.from(detail, sectionId: sectionId))
+        modelContext.insert(CachedSectionDetail.from(detail))
         try modelContext.save()
     }
     
@@ -112,12 +101,11 @@ actor CacheManagingImpl: CacheManaging {
         
         return cachedDetail.toSectionDetailed()
     }
-    
-    // MARK: - Cache Management
-    
-    func clearAllCache() throws {
-        try modelContext.delete(model: CachedSection.self)
-        try modelContext.delete(model: CachedSectionDetail.self)
-        try modelContext.save()
+}
+
+extension TimeInterval {
+    static func days(_ days: Int) -> TimeInterval {
+        TimeInterval(days * 24 * 60 * 60)
     }
 }
+

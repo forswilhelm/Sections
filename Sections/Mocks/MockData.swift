@@ -42,6 +42,7 @@ enum MockData {
     ]
     
     static let sectionDetail = SectionDetailed(
+        sectionId: "<id>",
         title: "Swedish Series",
         description: "Explore our wide selection of Swedish and international series. From thrilling dramas to captivating documentaries, find your next favorite show here."
     )

@@ -26,11 +26,11 @@ actor MockCacheManager: CacheManaging {
         return cachedSections
     }
     
-    func cacheSectionDetail(_ detail: SectionDetailed, for sectionId: String) throws {
+    func cacheSectionDetail(_ detail: SectionDetailed) throws {
         if shouldThrowOnCache {
             throw MockCacheError.cachingFailed
         }
-        cachedDetails[sectionId] = detail
+        cachedDetails[detail.sectionId] = detail
     }
     
     func getCachedSectionDetail(for sectionId: String) -> SectionDetailed? {
